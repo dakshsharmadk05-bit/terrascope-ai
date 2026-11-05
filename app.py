@@ -7,7 +7,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
 import folium
 from streamlit_folium import st_folium
 
@@ -31,7 +30,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* Main page */
+/* Main page spacing */
 
 .block-container {
     padding-top: 1.5rem;
@@ -39,56 +38,38 @@ st.markdown("""
     max-width: 1500px;
 }
 
-/* Header */
+/* Main heading */
 
 .main-title {
-    font-size: 2.6rem;
+    font-size: 2.7rem;
     font-weight: 800;
     margin-bottom: 0;
 }
 
 .subtitle {
-    color: #667085;
+    color: #8b949e;
     font-size: 1.05rem;
-    margin-top: 4px;
+    margin-top: 5px;
     margin-bottom: 25px;
 }
 
-/* Section headings */
-
-.section-title {
-    font-size: 1.55rem;
-    font-weight: 700;
-    margin-top: 10px;
-    margin-bottom: 5px;
-}
-
-/* Cards */
-
-.info-card {
-    background: #f8faf9;
-    border: 1px solid #e5e7eb;
-    padding: 18px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-}
+/* Formula box */
 
 .formula-card {
-    background: #f5f9f6;
+    border: 1px solid rgba(128,128,128,0.25);
     border-left: 5px solid #2e7d32;
     padding: 20px;
     border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 15px;
 }
 
-/* Sidebar */
+/* Footer */
 
-[data-testid="stSidebar"] {
-    background-color: #f7f9f8;
-}
-
-.small-note {
-    font-size: 0.85rem;
-    color: #667085;
+.footer {
+    text-align: center;
+    color: #8b949e;
+    padding: 20px;
 }
 
 </style>
@@ -116,28 +97,32 @@ st.markdown(
 # SIDEBAR
 # ============================================================
 
-st.sidebar.title("TerraScope AI")
+st.sidebar.title("🌍 TerraScope AI")
 
 st.sidebar.caption(
-    "Land Use & Deforestation Model"
+    "AI-GIS Land Use & Deforestation Model"
 )
 
-st.sidebar.markdown("---")
+st.sidebar.divider()
+
 
 study_area = st.sidebar.selectbox(
     "Study Area",
     ["Uttarakhand"]
 )
 
+
 baseline_year = st.sidebar.selectbox(
     "Baseline Year",
     [2020]
 )
 
+
 comparison_year = st.sidebar.selectbox(
     "Comparison Year",
     [2025]
 )
+
 
 model_choice = st.sidebar.selectbox(
     "AI Classification Model",
@@ -147,7 +132,9 @@ model_choice = st.sidebar.selectbox(
     ]
 )
 
-st.sidebar.markdown("---")
+
+st.sidebar.divider()
+
 
 st.sidebar.markdown("### Land-Use Classes")
 
@@ -163,7 +150,9 @@ st.sidebar.markdown("""
 🟫 **Barren Land**
 """)
 
-st.sidebar.markdown("---")
+
+st.sidebar.divider()
+
 
 st.sidebar.markdown("### Satellite Data")
 
@@ -177,8 +166,9 @@ st.sidebar.markdown("""
 **Study Area:** Uttarakhand
 """)
 
+
 st.sidebar.caption(
-    "Final classified values should be derived from processed satellite imagery."
+    "Final results will be derived from classified satellite imagery."
 )
 
 
@@ -187,13 +177,14 @@ st.sidebar.caption(
 # ============================================================
 #
 # IMPORTANT:
-# These values are ONLY for demonstrating the working of the
-# Streamlit application.
 #
-# They are NOT official Uttarakhand forest statistics.
+# These values are ONLY demonstration values.
 #
-# When satellite classification results are available,
-# replace these values with the calculated areas.
+# They are NOT official Uttarakhand statistics.
+#
+# They will later be replaced by results calculated from
+# classified Sentinel-2 satellite imagery.
+#
 # ============================================================
 
 landuse_data = pd.DataFrame({
@@ -234,6 +225,7 @@ landuse_data["Change"] = (
     landuse_data["2020"]
 )
 
+
 landuse_data["Change (%)"] = (
     landuse_data["Change"] /
     landuse_data["2020"] *
@@ -242,13 +234,14 @@ landuse_data["Change (%)"] = (
 
 
 # ============================================================
-# FOREST / DEFORESTATION CALCULATIONS
+# FOREST CALCULATIONS
 # ============================================================
 
 forest_2020 = landuse_data.loc[
     landuse_data["Land Use"] == "Forest",
     "2020"
 ].iloc[0]
+
 
 forest_2025 = landuse_data.loc[
     landuse_data["Land Use"] == "Forest",
@@ -275,14 +268,13 @@ else:
 
 
 # ============================================================
-# DATA STATUS WARNING
+# PROTOTYPE WARNING
 # ============================================================
 
 st.warning(
     "⚠️ **Prototype Data:** The numerical land-use values currently "
-    "shown in TerraScope AI are demonstration values used to test the "
-    "model interface. They are NOT official Uttarakhand forest statistics. "
-    "Final values must be generated from the classified satellite imagery."
+    "displayed are demonstration values for testing TerraScope AI. "
+    "They are not official Uttarakhand forest statistics."
 )
 
 
@@ -290,32 +282,38 @@ st.warning(
 # MODEL OVERVIEW
 # ============================================================
 
-st.markdown(
-    '<div class="section-title">Model Overview</div>',
-    unsafe_allow_html=True
-)
+st.header("Model Overview")
+
 
 col1, col2, col3, col4 = st.columns(4)
 
+
 with col1:
+
     st.metric(
         "Study Area",
-        "Uttarakhand"
+        study_area
     )
+
 
 with col2:
+
     st.metric(
-        "Baseline",
-        str(baseline_year)
+        "Baseline Year",
+        baseline_year
     )
+
 
 with col3:
+
     st.metric(
-        "Comparison",
-        str(comparison_year)
+        "Comparison Year",
+        comparison_year
     )
 
+
 with col4:
+
     st.metric(
         "AI Model",
         model_choice
@@ -326,14 +324,15 @@ st.divider()
 
 
 # ============================================================
-# 1. LAND-USE CLASSIFICATION
+# 1. LAND-USE CLASSIFICATION MAP
 # ============================================================
 
-st.header("1. Land-Use Classification")
+st.header("1. Land-Use Classification Map")
+
 
 st.write(
-    "Satellite imagery is classified into five land-use categories "
-    "using a supervised machine-learning model."
+    "The satellite image is classified into five land-use "
+    "categories using a supervised machine-learning model."
 )
 
 
@@ -345,84 +344,126 @@ map_year = st.radio(
 
 
 # ============================================================
-# BASE MAP
+# CREATE MAP
 # ============================================================
 
 classification_map = folium.Map(
-    location=[30.2, 79.2],
-    zoom_start=7,
-    tiles=None
-)
 
-folium.TileLayer(
-    tiles="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attr="© OpenStreetMap contributors",
-    name="OpenStreetMap",
-    control=True
-).add_to(classification_map)
+    location=[30.2, 79.2],
+
+    zoom_start=7,
+
+    tiles="OpenStreetMap"
+
+)
 
 
 # ============================================================
-# STUDY AREA MARKERS
+# UTTARAKHAND REFERENCE LOCATIONS
 # ============================================================
 
 locations = [
+
     ["Dehradun", 30.3165, 78.0322],
+
+    ["Haridwar", 29.9457, 78.1642],
+
     ["Nainital", 29.3919, 79.4542],
+
     ["Almora", 29.5892, 79.6467],
+
     ["Pithoragarh", 29.5829, 80.2182],
+
     ["Chamoli", 30.4036, 79.3220],
+
     ["Uttarkashi", 30.7268, 78.4354],
-    ["Haridwar", 29.9457, 78.1642]
+
+    ["Rudraprayag", 30.2844, 78.9811],
+
+    ["Bageshwar", 29.8376, 79.7713]
+
 ]
 
 
 for place, latitude, longitude in locations:
 
     folium.CircleMarker(
-        location=[latitude, longitude],
+
+        location=[
+            latitude,
+            longitude
+        ],
+
         radius=5,
+
         tooltip=place,
-        popup=f"{place} | Classification Year: {map_year}",
+
+        popup=(
+            f"{place}<br>"
+            f"Classification Year: {map_year}"
+        ),
+
         color="#2e7d32",
+
         fill=True,
+
         fill_opacity=0.8
+
     ).add_to(classification_map)
 
 
-folium.LayerControl().add_to(
-    classification_map
-)
-
+# ============================================================
+# DISPLAY MAP
+# ============================================================
 
 st_folium(
+
     classification_map,
+
     width=None,
+
     height=500,
+
     returned_objects=[]
+
 )
 
 
 st.info(
-    "The current map identifies the Uttarakhand study region. "
-    "The final version will overlay the classified Sentinel-2 "
-    "raster produced by the machine-learning model."
+    "This map currently identifies the Uttarakhand study region. "
+    "The final version will display the classified Sentinel-2 "
+    "land-use raster."
 )
 
 
 # ============================================================
-# LAND-USE LEGEND
+# CLASSIFICATION LEGEND
 # ============================================================
 
-st.markdown("#### Classification Classes")
+st.subheader("Land-Use Classes")
 
-c1, c2, c3, c4, c5 = st.columns(5)
 
-c1.success("🌲 Forest")
-c2.warning("🌾 Agriculture")
-c3.error("🏙️ Built-up")
-c4.info("💧 Water Body")
-c5.markdown("🟫 **Barren Land**")
+class1, class2, class3, class4, class5 = st.columns(5)
+
+
+with class1:
+    st.success("🌲 Forest")
+
+
+with class2:
+    st.warning("🌾 Agriculture")
+
+
+with class3:
+    st.error("🏙️ Built-up")
+
+
+with class4:
+    st.info("💧 Water Body")
+
+
+with class5:
+    st.markdown("🟫 **Barren Land**")
 
 
 st.divider()
@@ -434,18 +475,19 @@ st.divider()
 
 st.header("2. Deforestation Assessment")
 
+
 st.write(
-    "Forest cover from the baseline classified image is compared "
-    "with the comparison-year classified image to identify forest "
-    "converted into non-forest land."
+    "Forest cover from the baseline year is compared with "
+    "forest cover from the comparison year to estimate forest loss."
 )
 
 
 # ============================================================
-# DEFORESTATION METRICS
+# FOREST METRICS
 # ============================================================
 
 col1, col2, col3, col4 = st.columns(4)
+
 
 with col1:
 
@@ -466,7 +508,7 @@ with col2:
 with col3:
 
     st.metric(
-        "Estimated Forest Loss",
+        "Forest Loss",
         f"{forest_loss:,.0f} km²"
     )
 
@@ -480,24 +522,30 @@ with col4:
 
 
 # ============================================================
-# FORMULA
+# DEFORESTATION FORMULA
 # ============================================================
 
-st.markdown("### Deforestation Calculation")
+st.subheader("Deforestation Calculation")
+
 
 st.markdown(
-    '<div class="formula-card">'
-    '<b>Forest Loss</b> = Forest Area in Baseline Year '
-    '− Forest Area in Comparison Year'
-    '</div>',
+    """
+    <div class="formula-card">
+
+    <b>Forest Loss</b> =
+    Forest Area in Baseline Year −
+    Forest Area in Comparison Year
+
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
-st.write("")
 
 st.latex(
-    r"Forest\ Loss = A_{2020} - A_{2025}"
+    r"Forest\ Loss=A_{2020}-A_{2025}"
 )
+
 
 st.latex(
     r"Deforestation\ (\%)="
@@ -506,36 +554,54 @@ st.latex(
 
 
 # ============================================================
-# SHOW CALCULATION
+# AUTOMATIC CALCULATION
 # ============================================================
 
-st.markdown("#### Current Calculation")
+st.subheader("Calculated Result")
 
-st.write(
-    f"Forest Loss = {forest_2020:,.0f} − "
-    f"{forest_2025:,.0f}"
-)
 
-st.write(
-    f"**Forest Loss = {forest_loss:,.0f} km²**"
-)
+calculation_col1, calculation_col2 = st.columns(2)
 
-st.write(
-    f"Deforestation (%) = "
-    f"({forest_2020:,.0f} − {forest_2025:,.0f}) "
-    f"/ {forest_2020:,.0f} × 100"
-)
 
-st.success(
-    f"Estimated Deforestation = "
-    f"{deforestation_percentage:.2f}%"
-)
+with calculation_col1:
+
+    st.write("**Forest Loss Calculation**")
+
+    st.write(
+        f"{forest_2020:,.0f} − "
+        f"{forest_2025:,.0f}"
+    )
+
+    st.success(
+        f"Forest Loss = "
+        f"{forest_loss:,.0f} km²"
+    )
+
+
+with calculation_col2:
+
+    st.write("**Deforestation Percentage**")
+
+    st.write(
+        f"({forest_2020:,.0f} − "
+        f"{forest_2025:,.0f}) "
+        f"÷ {forest_2020:,.0f} × 100"
+    )
+
+    st.success(
+        f"Deforestation = "
+        f"{deforestation_percentage:.2f}%"
+    )
+
 
 st.caption(
-    "This calculation currently uses demonstration values. "
-    "It will automatically use satellite-derived forest areas "
-    "when the final classification results are connected."
+    "The current calculation uses demonstration values. "
+    "Once satellite classification is connected, these values "
+    "will be calculated automatically from the classified images."
 )
+
+
+st.divider()
 
 
 # ============================================================
@@ -544,70 +610,94 @@ st.caption(
 
 st.header("3. Deforestation Map")
 
+
 st.write(
-    "The deforestation layer represents locations where pixels "
-    "classified as forest in 2020 become a non-forest land-use "
-    "class in 2025."
+    "Deforestation is identified where an area classified as "
+    "forest in 2020 changes to a non-forest class in 2025."
 )
 
+
+# ============================================================
+# CREATE DEFORESTATION MAP
+# ============================================================
 
 deforestation_map = folium.Map(
+
     location=[30.2, 79.2],
+
     zoom_start=7,
-    tiles=None
+
+    tiles="OpenStreetMap"
+
 )
 
 
-folium.TileLayer(
-    tiles="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attr="© OpenStreetMap contributors",
-    name="OpenStreetMap"
-).add_to(deforestation_map)
-
-
 # ============================================================
-# DEMONSTRATION CHANGE LOCATIONS
+# DEMONSTRATION FOREST-CHANGE AREAS
 # ============================================================
 #
-# These are visual placeholders ONLY.
-# They are NOT actual deforestation hotspots.
+# THESE ARE NOT REAL DEFORESTATION HOTSPOTS.
+#
+# They only demonstrate how the final map will work.
+#
 # ============================================================
 
 demo_change_locations = [
+
     [30.31, 78.10],
+
     [29.95, 78.20],
+
     [29.45, 79.40],
+
     [29.60, 79.70],
+
     [30.40, 79.30]
+
 ]
 
 
 for point in demo_change_locations:
 
     folium.Circle(
+
         location=point,
+
         radius=9000,
+
         color="#c62828",
+
         fill=True,
+
         fill_color="#ef5350",
-        fill_opacity=0.30,
+
+        fill_opacity=0.35,
+
         tooltip="Demonstration forest-change area"
+
     ).add_to(deforestation_map)
 
 
+# ============================================================
+# DISPLAY DEFORESTATION MAP
+# ============================================================
+
 st_folium(
+
     deforestation_map,
+
     width=None,
+
     height=500,
+
     returned_objects=[]
+
 )
 
 
 st.warning(
-    "Red areas on this prototype map are demonstration markers only. "
-    "They are NOT verified deforestation locations. Final forest-loss "
-    "pixels must be generated by comparing the classified 2020 and "
-    "2025 satellite images."
+    "The red areas shown above are demonstration markers only. "
+    "They are NOT verified deforestation locations."
 )
 
 
@@ -620,27 +710,39 @@ st.divider()
 
 st.header("4. Area-Wise Comparison Table")
 
+
 st.write(
-    "The table compares the estimated area occupied by each "
-    "land-use class between the two selected years."
+    "Land-use areas from the baseline and comparison years "
+    "are compared below."
 )
 
 
 comparison_table = landuse_data.copy()
 
+
 comparison_table.columns = [
+
     "Land-Use Category",
+
     "Area 2020 (km²)",
+
     "Area 2025 (km²)",
+
     "Change (km²)",
+
     "Change (%)"
+
 ]
 
 
 st.dataframe(
+
     comparison_table,
+
     use_container_width=True,
+
     hide_index=True
+
 )
 
 
@@ -648,21 +750,33 @@ st.dataframe(
 # CHANGE INTERPRETATION
 # ============================================================
 
-st.markdown("#### Change Interpretation")
+st.subheader("Change Interpretation")
+
 
 interpretation_data = landuse_data.copy()
 
+
 interpretation_data["Trend"] = np.where(
+
     interpretation_data["Change"] > 0,
+
     "Increase",
+
     np.where(
+
         interpretation_data["Change"] < 0,
+
         "Decrease",
+
         "No Change"
+
     )
+
 )
 
+
 st.dataframe(
+
     interpretation_data[
         [
             "Land Use",
@@ -671,8 +785,11 @@ st.dataframe(
             "Trend"
         ]
     ],
+
     use_container_width=True,
+
     hide_index=True
+
 )
 
 
@@ -685,8 +802,10 @@ st.divider()
 
 st.header("5. Land-Use Change Graph")
 
+
 st.write(
-    "The graph compares land-use area between 2020 and 2025."
+    "The graph compares the area of each land-use category "
+    "between 2020 and 2025."
 )
 
 
@@ -702,10 +821,11 @@ graph_data = landuse_data.melt(
     var_name="Year",
 
     value_name="Area (km²)"
+
 )
 
 
-fig = px.bar(
+comparison_fig = px.bar(
 
     graph_data,
 
@@ -718,10 +838,11 @@ fig = px.bar(
     barmode="group",
 
     title="Land-Use Area Comparison: 2020 vs 2025"
+
 )
 
 
-fig.update_layout(
+comparison_fig.update_layout(
 
     xaxis_title="Land-Use Category",
 
@@ -730,20 +851,24 @@ fig.update_layout(
     legend_title="Year",
 
     hovermode="x unified"
+
 )
 
 
 st.plotly_chart(
-    fig,
+
+    comparison_fig,
+
     use_container_width=True
+
 )
 
 
 # ============================================================
-# LAND-USE CHANGE GRAPH
+# NET CHANGE GRAPH
 # ============================================================
 
-st.markdown("### Net Land-Use Change")
+st.subheader("Net Land-Use Change")
 
 
 change_fig = px.bar(
@@ -759,6 +884,7 @@ change_fig = px.bar(
     labels={
         "Change": "Area Change (km²)"
     }
+
 )
 
 
@@ -769,8 +895,11 @@ change_fig.add_hline(
 
 
 st.plotly_chart(
+
     change_fig,
+
     use_container_width=True
+
 )
 
 
@@ -778,41 +907,44 @@ st.divider()
 
 
 # ============================================================
-# 6. AI MODEL
+# 6. AI CLASSIFICATION MODEL
 # ============================================================
 
 st.header("6. AI Classification Model")
 
 
-left, right = st.columns([1, 1])
+model_col1, model_col2 = st.columns(2)
 
 
-with left:
+with model_col1:
 
-    st.markdown("### Selected Model")
+    st.subheader("Selected Model")
 
     st.info(
         f"🤖 {model_choice}"
     )
 
+
     if model_choice == "Random Forest":
 
         st.write(
-            "Random Forest uses multiple decision trees to classify "
-            "satellite pixels according to their spectral characteristics."
+            "Random Forest combines multiple decision trees "
+            "to classify satellite pixels according to their "
+            "spectral characteristics."
         )
 
     else:
 
         st.write(
-            "Support Vector Machine separates land-use classes by "
-            "finding decision boundaries between labelled training samples."
+            "Support Vector Machine separates land-use classes "
+            "using decision boundaries generated from labelled "
+            "training samples."
         )
 
 
-with right:
+with model_col2:
 
-    st.markdown("### Input Classes")
+    st.subheader("Classification Classes")
 
     st.markdown("""
     **1. Forest**
@@ -828,21 +960,22 @@ with right:
 
 
 # ============================================================
-# AI WORKFLOW
+# AI-GIS WORKFLOW
 # ============================================================
 
-st.markdown("### AI-GIS Workflow")
+st.subheader("AI-GIS Workflow")
+
 
 st.markdown("""
-**Satellite Image**
+**Sentinel-2 Satellite Image**
 
-↓  
+↓
 
 **Image Pre-processing**
 
 ↓
 
-**Training Samples**
+**Labelled Training Samples**
 
 ↓
 
@@ -866,7 +999,11 @@ st.markdown("""
 
 ↓
 
-**Deforestation Map + Area Calculation**
+**Deforestation Map**
+
+↓
+
+**Forest-Loss Calculation**
 """)
 
 
@@ -874,36 +1011,42 @@ st.divider()
 
 
 # ============================================================
-# 7. METHODOLOGY
+# 7. WORKING PROCESS
 # ============================================================
 
-st.header("7. Methodology")
+st.header("7. Working Process")
 
 
 st.markdown("""
-### Step 1 — Satellite Image Acquisition
+### Step 1 — Download Satellite Images
 
-Satellite images for **2020 and 2025** are obtained from
-**Sentinel-2** through platforms such as Google Earth Engine
-or Copernicus Data Space.
+Satellite images from two different years are obtained from
+**Google Earth Engine, Copernicus Data Space, or Sentinel Hub**.
+
+For TerraScope AI:
+
+- Baseline image: **2020**
+- Comparison image: **2025**
+- Satellite: **Sentinel-2**
+- Study area: **Uttarakhand**
 
 ---
 
-### Step 2 — Image Pre-processing
+### Step 2 — Pre-process and Crop Images
 
-Satellite images are prepared by:
+The satellite images are prepared by:
 
-- selecting the study area,
+- selecting Uttarakhand as the study area,
 - filtering cloud-covered images,
-- creating cloud-reduced composites,
-- selecting required spectral bands, and
-- cropping the imagery to Uttarakhand.
+- selecting appropriate spectral bands,
+- generating a cloud-reduced image, and
+- cropping the image to the study area.
 
 ---
 
-### Step 3 — Land-Use Classes
+### Step 3 — Divide the Area into Land-Use Classes
 
-Training samples are created for five categories:
+Five land-use classes are used:
 
 1. Forest
 2. Agriculture
@@ -913,38 +1056,56 @@ Training samples are created for five categories:
 
 ---
 
-### Step 4 — AI Model Training
+### Step 4 — Train the AI Model
 
-The labelled training samples are used to train a
-**Random Forest** or **Support Vector Machine** classifier.
+Labelled samples representing each land-use category are
+used to train the machine-learning classifier.
 
----
+The model can use:
 
-### Step 5 — Image Classification
+**Random Forest**
 
-The trained model predicts the land-use category of satellite
-pixels and generates a classified land-use map.
+or
 
----
-
-### Step 6 — Change Detection
-
-The classified **2020** and **2025** images are compared.
-
-Land-use transitions are detected by comparing the class of
-each corresponding pixel.
+**Support Vector Machine**
 
 ---
 
-### Step 7 — Deforestation Detection
+### Step 5 — Classify the Satellite Image
 
-Pixels classified as:
+The trained AI model predicts the land-use class of each
+satellite pixel.
+
+The result is the:
+
+**Land-Use Classification Map**
+
+---
+
+### Step 6 — Compare Images from Two Years
+
+The classified images from **2020 and 2025** are compared
+pixel by pixel.
+
+This identifies areas where land use has changed.
+
+---
+
+### Step 7 — Calculate Forest Loss
+
+Areas classified as:
 
 **Forest in 2020 → Non-Forest in 2025**
 
 are identified as potential forest-loss areas.
 
-Forest loss and percentage deforestation are then calculated.
+Forest loss is then calculated using:
+
+**Forest Loss = Forest Area 2020 − Forest Area 2025**
+
+and:
+
+**Deforestation (%) = [(Forest Area 2020 − Forest Area 2025) / Forest Area 2020] × 100**
 """)
 
 
@@ -952,7 +1113,7 @@ st.divider()
 
 
 # ============================================================
-# 8. EXPECTED OUTPUTS
+# 8. OUTPUTS
 # ============================================================
 
 st.header("8. Model Outputs")
@@ -963,45 +1124,35 @@ output1, output2 = st.columns(2)
 
 with output1:
 
-    st.markdown("""
-    ### 🗺️ Land-Use Classification Map
+    st.subheader("🗺️ Land-Use Classification Map")
 
-    Displays:
-
-    - Forest
-    - Agriculture
-    - Built-up Area
-    - Water Body
-    - Barren Land
-    """)
+    st.write(
+        "Displays the five classified land-use categories "
+        "for the selected satellite image."
+    )
 
 
-    st.markdown("""
-    ### 📋 Area-Wise Comparison Table
+    st.subheader("📋 Area-Wise Comparison Table")
 
-    Compares land-use area between:
-
-    **2020 and 2025**
-    """)
+    st.write(
+        "Compares land-use areas between 2020 and 2025."
+    )
 
 
 with output2:
 
-    st.markdown("""
-    ### 🌲 Deforestation Map
+    st.subheader("🌲 Deforestation Map")
 
-    Identifies areas changing from:
-
-    **Forest → Non-Forest**
-    """)
+    st.write(
+        "Shows areas changing from forest to non-forest."
+    )
 
 
-    st.markdown("""
-    ### 📊 Land-Use Change Graph
+    st.subheader("📊 Land-Use Change Graph")
 
-    Visualises changes in the five land-use categories
-    between the two years.
-    """)
+    st.write(
+        "Visualises changes in the five land-use categories."
+    )
 
 
 st.divider()
@@ -1015,42 +1166,51 @@ st.header("Data Sources")
 
 
 st.markdown("""
-**Satellite imagery**
+### Satellite Imagery
 
-Copernicus Sentinel-2 / European Union Space Programme
+**Copernicus Sentinel-2**
 
-**Satellite data access**
+Sentinel-2 multispectral satellite imagery is used for
+land-use and land-cover classification.
 
-Google Earth Engine or Copernicus Data Space Ecosystem
+### Satellite Data Access
 
-**Study Area**
+Satellite data can be obtained through:
 
-Uttarakhand, India
+- Google Earth Engine
+- Copernicus Data Space Ecosystem
+- Sentinel Hub
 
-**Machine-Learning Methods**
+### Study Area
 
-Random Forest / Support Vector Machine
+**Uttarakhand, India**
 
-**GIS Processing**
+### Machine-Learning Models
 
-Satellite-image classification and land-use change detection
+- Random Forest
+- Support Vector Machine
 """)
 
 
+st.divider()
+
+
 # ============================================================
-# FINAL DISCLAIMER
+# IMPORTANT NOTE
 # ============================================================
 
 st.warning("""
 ### Important Data Note
 
-TerraScope AI is currently operating as a project prototype.
+TerraScope AI is currently a working project prototype.
 
-The numerical land-use areas and red forest-change locations
-displayed in this version are **demonstration values** and must
-not be cited as measured deforestation in Uttarakhand.
+The numerical land-use areas and the red forest-change areas
+currently displayed are **demonstration values only**.
 
-The final results should be generated from classified Sentinel-2
+They must not be presented as measured or official
+deforestation statistics for Uttarakhand.
+
+The final values will be obtained from classified Sentinel-2
 satellite imagery for 2020 and 2025.
 """)
 
@@ -1059,14 +1219,16 @@ satellite imagery for 2020 and 2025.
 # FOOTER
 # ============================================================
 
-st.markdown("---")
-
 st.markdown(
     """
-    <div style="text-align:center; color:#667085;">
+    <div class="footer">
+
     <b>TerraScope AI</b><br>
+
     AI-GIS Land Use & Deforestation Model<br>
+
     Uttarakhand, India
+
     </div>
     """,
     unsafe_allow_html=True
