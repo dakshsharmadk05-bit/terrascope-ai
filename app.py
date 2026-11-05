@@ -10,7 +10,7 @@ from streamlit_folium import st_folium
 # ---------------------------------------------------------
 
 st.set_page_config(
-    page_title="AI-GIS Land Use & Deforestation Model",
+    page_title="TerraScope AI",
     page_icon="🌲",
     layout="wide"
 )
