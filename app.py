@@ -24,7 +24,7 @@ st.set_page_config(
 
 
 # ============================================================
-# CUSTOM CSS
+# CSS
 # ============================================================
 
 st.markdown("""
@@ -36,23 +36,31 @@ st.markdown("""
     max-width: 1500px;
 }
 
-.main-title {
-    font-size: 2.7rem;
+.hero-title {
+    font-size: 3rem;
     font-weight: 800;
     margin-bottom: 0;
 }
 
-.subtitle {
+.hero-subtitle {
+    font-size: 1.1rem;
     color: #8b949e;
-    font-size: 1.05rem;
-    margin-top: 5px;
-    margin-bottom: 25px;
+    margin-top: 4px;
+    margin-bottom: 20px;
 }
 
-.formula-card {
+.section-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b949e;
+    font-weight: 700;
+}
+
+.formula-box {
     border: 1px solid rgba(128,128,128,0.25);
     border-left: 5px solid #2e7d32;
-    padding: 20px;
+    padding: 18px;
     border-radius: 10px;
     margin-top: 10px;
     margin-bottom: 15px;
@@ -61,93 +69,11 @@ st.markdown("""
 .footer {
     text-align: center;
     color: #8b949e;
-    padding: 20px;
+    padding: 25px;
 }
 
 </style>
 """, unsafe_allow_html=True)
-
-
-# ============================================================
-# HEADER
-# ============================================================
-
-st.markdown(
-    '<div class="main-title">🌍 TerraScope AI</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="subtitle">'
-    'AI-GIS Land Use Classification & Deforestation Assessment'
-    '</div>',
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
-# SIDEBAR
-# ============================================================
-
-st.sidebar.title("🌍 TerraScope AI")
-
-st.sidebar.caption(
-    "AI-GIS Land Use & Deforestation Model"
-)
-
-st.sidebar.divider()
-
-study_area = st.sidebar.selectbox(
-    "Study Area",
-    ["Uttarakhand"]
-)
-
-baseline_year = st.sidebar.selectbox(
-    "Baseline Year",
-    [2020]
-)
-
-comparison_year = st.sidebar.selectbox(
-    "Comparison Year",
-    [2025]
-)
-
-model_choice = st.sidebar.selectbox(
-    "AI Classification Model",
-    ["Random Forest"]
-)
-
-st.sidebar.divider()
-
-st.sidebar.markdown("### Land-Use Classes")
-
-st.sidebar.markdown("""
-🌲 **Forest**
-
-🌾 **Agriculture**
-
-🏙️ **Built-up Area**
-
-💧 **Water Body**
-
-🟫 **Barren Land**
-""")
-
-st.sidebar.divider()
-
-st.sidebar.markdown("### Data Sources")
-
-st.sidebar.markdown("""
-**Satellite:** Sentinel-2
-
-**Reference Labels:** ESA WorldCover 2020
-
-**Processing:** Google Earth Engine
-
-**Baseline:** 2020
-
-**Comparison:** 2025
-""")
 
 
 # ============================================================
@@ -179,18 +105,14 @@ landuse_data = pd.DataFrame({
         1818.3352222253122,
         8967.373650284231
     ]
-
 })
 
-
-# ============================================================
-# CALCULATE LAND-USE CHANGE
-# ============================================================
 
 landuse_data["Change"] = (
     landuse_data["2025"] -
     landuse_data["2020"]
 )
+
 
 landuse_data["Change (%)"] = (
     landuse_data["Change"] /
@@ -200,18 +122,23 @@ landuse_data["Change (%)"] = (
 
 
 # ============================================================
-# FOREST VALUES
+# FOREST RESULTS
 # ============================================================
 
-forest_2020 = landuse_data.loc[
-    landuse_data["Land Use"] == "Forest",
-    "2020"
-].iloc[0]
+forest_2020 = float(
+    landuse_data.loc[
+        landuse_data["Land Use"] == "Forest",
+        "2020"
+    ].iloc[0]
+)
 
-forest_2025 = landuse_data.loc[
-    landuse_data["Land Use"] == "Forest",
-    "2025"
-].iloc[0]
+
+forest_2025 = float(
+    landuse_data.loc[
+        landuse_data["Land Use"] == "Forest",
+        "2025"
+    ].iloc[0]
+)
 
 
 net_forest_change = (
@@ -219,1074 +146,1468 @@ net_forest_change = (
     forest_2020
 )
 
-net_forest_change_percentage = (
+
+net_forest_percentage = (
     net_forest_change /
     forest_2020 *
     100
 )
 
 
-# Required formula
-
-formula_result = (
+formula_forest_loss = (
     forest_2020 -
     forest_2025
 )
 
+
 formula_percentage = (
-    formula_result /
+    formula_forest_loss /
     forest_2020 *
     100
 )
 
 
 # ============================================================
-# DATA STATUS
+# SIDEBAR
 # ============================================================
 
-st.info(
-    "🛰️ **Earth Engine Results Loaded:** Land-use areas are based "
-    "on the TerraScope AI Random Forest classification of Sentinel-2 imagery."
+st.sidebar.title("🌍 TerraScope AI")
+
+st.sidebar.caption(
+    "AI-GIS Land Use & Deforestation Model"
 )
 
-st.warning(
-    "The values are model-derived remote-sensing estimates and "
-    "should not be interpreted as official government forest statistics."
-)
+st.sidebar.divider()
 
 
-# ============================================================
-# MODEL OVERVIEW
-# ============================================================
+page = st.sidebar.radio(
 
-st.header("Model Overview")
+    "Navigation",
 
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.metric(
-        "Study Area",
-        "Uttarakhand"
-    )
-
-with col2:
-    st.metric(
-        "Baseline",
-        "2020"
-    )
-
-with col3:
-    st.metric(
-        "Comparison",
-        "2025"
-    )
-
-with col4:
-    st.metric(
-        "AI Model",
-        "Random Forest"
-    )
-
-
-st.divider()
-
-
-# ============================================================
-# 1. LAND-USE CLASSIFICATION
-# ============================================================
-
-st.header("1. Land-Use Classification Map")
-
-st.write(
-    "Sentinel-2 imagery is classified into five land-use "
-    "categories using the Random Forest machine-learning model."
-)
-
-map_year = st.radio(
-    "Select classification year",
-    [2020, 2025],
-    horizontal=True
+    [
+        "🏠 Overview",
+        "🗺️ Land-Use Analysis",
+        "🌲 Forest Change",
+        "🧮 Deforestation Calculator",
+        "🤖 AI Model",
+        "📖 Methodology"
+    ]
 )
 
 
-# ============================================================
-# MAP
-# ============================================================
-
-classification_map = folium.Map(
-    location=[30.2, 79.2],
-    zoom_start=7,
-    tiles="OpenStreetMap"
-)
+st.sidebar.divider()
 
 
-locations = [
+st.sidebar.markdown("### Project")
 
-    ["Dehradun", 30.3165, 78.0322],
+st.sidebar.markdown("""
+**Study Area**  
+Uttarakhand, India
 
-    ["Haridwar", 29.9457, 78.1642],
+**Satellite**  
+Sentinel-2
 
-    ["Nainital", 29.3919, 79.4542],
+**Years**  
+2020 → 2025
 
-    ["Almora", 29.5892, 79.6467],
-
-    ["Pithoragarh", 29.5829, 80.2182],
-
-    ["Chamoli", 30.4036, 79.3220],
-
-    ["Uttarkashi", 30.7268, 78.4354],
-
-    ["Rudraprayag", 30.2844, 78.9811],
-
-    ["Bageshwar", 29.8376, 79.7713]
-
-]
+**AI Model**  
+Random Forest
+""")
 
 
-for place, latitude, longitude in locations:
-
-    folium.CircleMarker(
-
-        location=[latitude, longitude],
-
-        radius=5,
-
-        tooltip=place,
-
-        popup=(
-            f"{place}<br>"
-            f"Classification Year: {map_year}"
-        ),
-
-        color="#2e7d32",
-
-        fill=True,
-
-        fill_opacity=0.8
-
-    ).add_to(classification_map)
+st.sidebar.divider()
 
 
-st_folium(
-    classification_map,
-    width=None,
-    height=500,
-    returned_objects=[]
-)
+st.sidebar.markdown("### Land-Use Classes")
+
+st.sidebar.markdown("""
+🌲 Forest
+
+🌾 Agriculture
+
+🏙️ Built-up Area
+
+💧 Water Body
+
+🟫 Barren Land
+""")
 
 
-st.caption(
-    "The Google Earth Engine GeoTIFF classification outputs "
-    "represent the full raster land-use maps."
+st.sidebar.divider()
+
+
+st.sidebar.caption(
+    "TerraScope AI • Google Earth Engine"
 )
 
 
 # ============================================================
-# CLASSIFICATION LEGEND
+# COMMON HEADER
 # ============================================================
-
-st.subheader("Land-Use Classes")
-
-class1, class2, class3, class4, class5 = st.columns(5)
-
-with class1:
-    st.success("🌲 Forest")
-
-with class2:
-    st.warning("🌾 Agriculture")
-
-with class3:
-    st.error("🏙️ Built-up")
-
-with class4:
-    st.info("💧 Water Body")
-
-with class5:
-    st.markdown("🟫 **Barren Land**")
-
-
-st.divider()
-
-
-# ============================================================
-# 2. FOREST CHANGE ASSESSMENT
-# ============================================================
-
-st.header("2. Forest Change Assessment")
-
-st.write(
-    "The classified 2020 and 2025 satellite images are compared "
-    "to determine changes in total classified forest area."
-)
-
-
-col1, col2, col3, col4 = st.columns(4)
-
-
-with col1:
-
-    st.metric(
-        "Forest Area 2020",
-        f"{forest_2020:,.2f} km²"
-    )
-
-
-with col2:
-
-    st.metric(
-        "Forest Area 2025",
-        f"{forest_2025:,.2f} km²"
-    )
-
-
-with col3:
-
-    st.metric(
-        "Net Forest Change",
-        f"+{net_forest_change:,.2f} km²"
-    )
-
-
-with col4:
-
-    st.metric(
-        "Net Change",
-        f"+{net_forest_change_percentage:.2f}%"
-    )
-
-
-st.success(
-    f"The model estimates a net increase of "
-    f"{net_forest_change:,.2f} km² "
-    f"({net_forest_change_percentage:.2f}%) "
-    f"in classified forest area between 2020 and 2025."
-)
-
-
-st.divider()
-
-
-# ============================================================
-# 3. FOREST-LOSS FORMULA
-# ============================================================
-
-st.header("3. Forest-Loss Calculation")
 
 st.markdown(
-    """
-    <div class="formula-card">
+    '<div class="hero-title">🌍 TerraScope AI</div>',
+    unsafe_allow_html=True
+)
 
-    <b>Forest Loss</b> =
-    Forest Area in Baseline Year −
-    Forest Area in Comparison Year
-
-    </div>
-    """,
+st.markdown(
+    '<div class="hero-subtitle">'
+    'AI-GIS Land Use Classification & Deforestation Assessment'
+    '</div>',
     unsafe_allow_html=True
 )
 
 
-st.latex(
-    r"Forest\ Loss=A_{baseline}-A_{comparison}"
-)
+# ============================================================
+# PAGE 1 — OVERVIEW
+# ============================================================
 
-st.latex(
-    r"Deforestation\ (\%)="
-    r"\frac{A_{baseline}-A_{comparison}}"
-    r"{A_{baseline}}\times100"
-)
+if page == "🏠 Overview":
 
+    st.markdown(
+        '<div class="section-label">Project Dashboard</div>',
+        unsafe_allow_html=True
+    )
 
-calc1, calc2 = st.columns(2)
+    st.header(
+        "Land-Use Change in Uttarakhand"
+    )
 
-
-with calc1:
-
-    st.write("### Area Calculation")
 
     st.write(
-        f"{forest_2020:,.2f} − "
-        f"{forest_2025:,.2f}"
-    )
-
-    st.metric(
-        "Formula Result",
-        f"{formula_result:,.2f} km²"
+        "TerraScope AI combines satellite remote sensing, "
+        "machine learning and GIS to classify land use and "
+        "analyse forest change between 2020 and 2025."
     )
 
 
-with calc2:
+    # --------------------------------------------------------
+    # PROJECT CARDS
+    # --------------------------------------------------------
 
-    st.write("### Percentage Calculation")
-
-    st.write(
-        f"({forest_2020:,.2f} − "
-        f"{forest_2025:,.2f}) "
-        f"÷ {forest_2020:,.2f} × 100"
-    )
-
-    st.metric(
-        "Formula Result",
-        f"{formula_percentage:.2f}%"
-    )
+    c1, c2, c3, c4 = st.columns(4)
 
 
-st.info(
-    "The negative forest-loss result indicates that the model "
-    "estimated a net increase in total classified forest area."
-)
-
-
-st.divider()
-
-
-# ============================================================
-# 4. INTERACTIVE DEFORESTATION CALCULATOR
-# ============================================================
-
-st.header("4. 🌲 Interactive Deforestation Calculator")
-
-st.write(
-    "Enter forest-area values for any baseline and comparison "
-    "period to calculate forest loss, forest gain and percentage change."
-)
-
-
-st.latex(
-    r"Forest\ Loss=A_{baseline}-A_{comparison}"
-)
-
-
-st.latex(
-    r"Deforestation\ (\%)="
-    r"\frac{A_{baseline}-A_{comparison}}"
-    r"{A_{baseline}}\times100"
-)
-
-
-calculator_col1, calculator_col2 = st.columns(2)
-
-
-with calculator_col1:
-
-    calculator_baseline = st.number_input(
-        "Baseline Forest Area (km²)",
-        min_value=0.01,
-        value=float(round(forest_2020, 2)),
-        step=1.0
-    )
-
-
-with calculator_col2:
-
-    calculator_comparison = st.number_input(
-        "Comparison Forest Area (km²)",
-        min_value=0.0,
-        value=float(round(forest_2025, 2)),
-        step=1.0
-    )
-
-
-# ============================================================
-# CALCULATOR LOGIC
-# ============================================================
-
-calculator_result = (
-    calculator_baseline -
-    calculator_comparison
-)
-
-
-calculator_percentage = (
-    calculator_result /
-    calculator_baseline *
-    100
-)
-
-
-st.subheader("Calculator Result")
-
-
-result1, result2, result3 = st.columns(3)
-
-
-with result1:
-
-    st.metric(
-        "Baseline Area",
-        f"{calculator_baseline:,.2f} km²"
-    )
-
-
-with result2:
-
-    st.metric(
-        "Comparison Area",
-        f"{calculator_comparison:,.2f} km²"
-    )
-
-
-with result3:
-
-    if calculator_result > 0:
+    with c1:
 
         st.metric(
+            "Study Area",
+            "Uttarakhand"
+        )
+
+
+    with c2:
+
+        st.metric(
+            "Satellite",
+            "Sentinel-2"
+        )
+
+
+    with c3:
+
+        st.metric(
+            "Analysis Period",
+            "2020–2025"
+        )
+
+
+    with c4:
+
+        st.metric(
+            "AI Model",
+            "Random Forest"
+        )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # KEY RESULTS
+    # --------------------------------------------------------
+
+    st.subheader("Key Results")
+
+
+    r1, r2, r3, r4 = st.columns(4)
+
+
+    with r1:
+
+        st.metric(
+            "Forest Area 2020",
+            f"{forest_2020:,.2f} km²"
+        )
+
+
+    with r2:
+
+        st.metric(
+            "Forest Area 2025",
+            f"{forest_2025:,.2f} km²"
+        )
+
+
+    with r3:
+
+        st.metric(
+            "Net Forest Change",
+            f"+{net_forest_change:,.2f} km²"
+        )
+
+
+    with r4:
+
+        st.metric(
+            "Net Change",
+            f"+{net_forest_percentage:.2f}%"
+        )
+
+
+    st.success(
+        f"The classification estimates a net increase of "
+        f"{net_forest_change:,.2f} km² "
+        f"({net_forest_percentage:.2f}%) in total classified "
+        f"forest area between 2020 and 2025."
+    )
+
+
+    st.warning(
+        "These are model-derived remote-sensing estimates. "
+        "They are not official government forest statistics."
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # STUDY AREA MAP
+    # --------------------------------------------------------
+
+    st.subheader("Study Area")
+
+
+    overview_map = folium.Map(
+
+        location=[30.2, 79.2],
+
+        zoom_start=7,
+
+        tiles="OpenStreetMap"
+    )
+
+
+    cities = [
+
+        ["Dehradun", 30.3165, 78.0322],
+
+        ["Haridwar", 29.9457, 78.1642],
+
+        ["Nainital", 29.3919, 79.4542],
+
+        ["Almora", 29.5892, 79.6467],
+
+        ["Pithoragarh", 29.5829, 80.2182],
+
+        ["Chamoli", 30.4036, 79.3220],
+
+        ["Uttarkashi", 30.7268, 78.4354]
+
+    ]
+
+
+    for name, lat, lon in cities:
+
+        folium.CircleMarker(
+
+            [lat, lon],
+
+            radius=5,
+
+            tooltip=name,
+
+            color="#2e7d32",
+
+            fill=True
+
+        ).add_to(overview_map)
+
+
+    st_folium(
+
+        overview_map,
+
+        width=None,
+
+        height=480,
+
+        returned_objects=[]
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # PROJECT OUTPUTS
+    # --------------------------------------------------------
+
+    st.subheader("Project Outputs")
+
+
+    o1, o2 = st.columns(2)
+
+
+    with o1:
+
+        st.markdown("""
+        ### 🗺️ Land-Use Classification
+
+        Classification of satellite imagery into:
+
+        - Forest
+        - Agriculture
+        - Built-up Area
+        - Water Body
+        - Barren Land
+        """)
+
+
+        st.markdown("""
+        ### 📋 Area Comparison
+
+        Quantitative comparison of land-use areas
+        between 2020 and 2025.
+        """)
+
+
+    with o2:
+
+        st.markdown("""
+        ### 🌲 Deforestation Detection
+
+        Identification of pixels changing from:
+
+        **Forest → Non-Forest**
+        """)
+
+
+        st.markdown("""
+        ### 📊 Change Analysis
+
+        Graphical analysis of land-use change
+        between the two years.
+        """)
+
+
+# ============================================================
+# PAGE 2 — LAND USE ANALYSIS
+# ============================================================
+
+elif page == "🗺️ Land-Use Analysis":
+
+    st.markdown(
+        '<div class="section-label">Satellite Classification</div>',
+        unsafe_allow_html=True
+    )
+
+    st.header("Land-Use Analysis")
+
+
+    st.write(
+        "Explore the Random Forest classification results "
+        "for the five required land-use categories."
+    )
+
+
+    # --------------------------------------------------------
+    # YEAR SELECTION
+    # --------------------------------------------------------
+
+    selected_year = st.radio(
+
+        "Classification Year",
+
+        [2020, 2025],
+
+        horizontal=True
+    )
+
+
+    st.info(
+        f"Displaying classification information for "
+        f"**{selected_year}**."
+    )
+
+
+    # --------------------------------------------------------
+    # LAND USE MAP PLACEHOLDER
+    # --------------------------------------------------------
+
+    st.subheader(
+        f"Land-Use Classification Map — {selected_year}"
+    )
+
+
+    classification_map = folium.Map(
+
+        location=[30.2, 79.2],
+
+        zoom_start=7,
+
+        tiles="OpenStreetMap"
+    )
+
+
+    folium.Marker(
+
+        [30.3165, 78.0322],
+
+        tooltip="Uttarakhand",
+
+        popup=(
+            f"TerraScope AI Classification {selected_year}"
+        )
+
+    ).add_to(classification_map)
+
+
+    st_folium(
+
+        classification_map,
+
+        width=None,
+
+        height=500,
+
+        returned_objects=[]
+    )
+
+
+    st.caption(
+        "The exported Google Earth Engine classification "
+        "GeoTIFF will replace this base-map view once raster "
+        "processing is complete."
+    )
+
+
+    # --------------------------------------------------------
+    # LEGEND
+    # --------------------------------------------------------
+
+    st.subheader("Classification Legend")
+
+
+    l1, l2, l3, l4, l5 = st.columns(5)
+
+
+    l1.success("🌲 Forest")
+    l2.warning("🌾 Agriculture")
+    l3.error("🏙️ Built-up")
+    l4.info("💧 Water")
+    l5.markdown("🟫 **Barren Land**")
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # AREA TABLE
+    # --------------------------------------------------------
+
+    st.subheader("Area-Wise Comparison")
+
+
+    table = landuse_data.copy()
+
+
+    table.columns = [
+
+        "Land-Use Category",
+
+        "Area 2020 (km²)",
+
+        "Area 2025 (km²)",
+
+        "Change (km²)",
+
+        "Change (%)"
+    ]
+
+
+    numeric_columns = [
+
+        "Area 2020 (km²)",
+
+        "Area 2025 (km²)",
+
+        "Change (km²)",
+
+        "Change (%)"
+    ]
+
+
+    for col in numeric_columns:
+
+        table[col] = table[col].round(2)
+
+
+    st.dataframe(
+
+        table,
+
+        use_container_width=True,
+
+        hide_index=True
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # COMPARISON GRAPH
+    # --------------------------------------------------------
+
+    st.subheader("2020 vs 2025")
+
+
+    graph_data = landuse_data.melt(
+
+        id_vars="Land Use",
+
+        value_vars=[
+            "2020",
+            "2025"
+        ],
+
+        var_name="Year",
+
+        value_name="Area (km²)"
+    )
+
+
+    comparison_fig = px.bar(
+
+        graph_data,
+
+        x="Land Use",
+
+        y="Area (km²)",
+
+        color="Year",
+
+        barmode="group",
+
+        title=(
+            "Land-Use Area Comparison: "
+            "2020 vs 2025"
+        )
+    )
+
+
+    comparison_fig.update_layout(
+
+        xaxis_title="Land-Use Category",
+
+        yaxis_title="Area (km²)",
+
+        legend_title="Year"
+    )
+
+
+    st.plotly_chart(
+
+        comparison_fig,
+
+        use_container_width=True
+    )
+
+
+    # --------------------------------------------------------
+    # NET CHANGE
+    # --------------------------------------------------------
+
+    st.subheader("Net Land-Use Change")
+
+
+    change_fig = px.bar(
+
+        landuse_data,
+
+        x="Land Use",
+
+        y="Change",
+
+        title=(
+            "Net Change in Land-Use Area "
+            "(2020–2025)"
+        ),
+
+        labels={
+            "Change": "Change (km²)"
+        }
+    )
+
+
+    change_fig.add_hline(
+        y=0,
+        line_width=1
+    )
+
+
+    st.plotly_chart(
+
+        change_fig,
+
+        use_container_width=True
+    )
+
+
+    st.caption(
+        "Source: TerraScope AI Random Forest classification "
+        "processed using Google Earth Engine."
+    )
+
+
+# ============================================================
+# PAGE 3 — FOREST CHANGE
+# ============================================================
+
+elif page == "🌲 Forest Change":
+
+    st.markdown(
+        '<div class="section-label">Change Detection</div>',
+        unsafe_allow_html=True
+    )
+
+    st.header(
+        "Forest Change & Deforestation Assessment"
+    )
+
+
+    st.write(
+        "Forest change is assessed using both total classified "
+        "forest area and pixel-level Forest → Non-Forest transitions."
+    )
+
+
+    # --------------------------------------------------------
+    # FOREST METRICS
+    # --------------------------------------------------------
+
+    f1, f2, f3, f4 = st.columns(4)
+
+
+    with f1:
+
+        st.metric(
+            "Forest 2020",
+            f"{forest_2020:,.2f} km²"
+        )
+
+
+    with f2:
+
+        st.metric(
+            "Forest 2025",
+            f"{forest_2025:,.2f} km²"
+        )
+
+
+    with f3:
+
+        st.metric(
+            "Net Change",
+            f"+{net_forest_change:,.2f} km²"
+        )
+
+
+    with f4:
+
+        st.metric(
+            "Net Change",
+            f"+{net_forest_percentage:.2f}%"
+        )
+
+
+    st.success(
+        "The model estimates a net increase in total "
+        "classified forest area."
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # FORMULA
+    # --------------------------------------------------------
+
+    st.subheader("Required Forest-Loss Formula")
+
+
+    st.markdown(
+        """
+        <div class="formula-box">
+
+        <b>Forest Loss</b> =
+        Baseline Forest Area − Comparison Forest Area
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    st.latex(
+        r"Forest\ Loss=A_{2020}-A_{2025}"
+    )
+
+
+    st.latex(
+        r"Deforestation\ (\%)="
+        r"\frac{A_{2020}-A_{2025}}"
+        r"{A_{2020}}\times100"
+    )
+
+
+    c1, c2 = st.columns(2)
+
+
+    with c1:
+
+        st.metric(
+            "Formula Result",
+            f"{formula_forest_loss:,.2f} km²"
+        )
+
+
+    with c2:
+
+        st.metric(
+            "Formula Percentage",
+            f"{formula_percentage:.2f}%"
+        )
+
+
+    st.info(
+        "The negative forest-loss result indicates a "
+        "net forest-area increase, rather than net deforestation."
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # FOREST GRAPH
+    # --------------------------------------------------------
+
+    st.subheader("Forest Area Comparison")
+
+
+    forest_df = pd.DataFrame({
+
+        "Year": [
+            "2020",
+            "2025"
+        ],
+
+        "Forest Area (km²)": [
+            forest_2020,
+            forest_2025
+        ]
+    })
+
+
+    forest_fig = px.bar(
+
+        forest_df,
+
+        x="Year",
+
+        y="Forest Area (km²)",
+
+        text_auto=".2f",
+
+        title=(
+            "Classified Forest Area: "
+            "2020 vs 2025"
+        )
+    )
+
+
+    st.plotly_chart(
+
+        forest_fig,
+
+        use_container_width=True
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # DEFORESTATION MAP
+    # --------------------------------------------------------
+
+    st.subheader(
+        "Forest → Non-Forest Change Map"
+    )
+
+
+    st.markdown("""
+    **Detection logic**
+
+    Forest in 2020  
+    ↓  
+    Corresponding pixel analysed in 2025  
+    ↓  
+    Non-Forest in 2025  
+    ↓  
+    **Potential Forest-Loss Pixel**
+    """)
+
+
+    change_map = folium.Map(
+
+        location=[30.2, 79.2],
+
+        zoom_start=7,
+
+        tiles="OpenStreetMap"
+    )
+
+
+    st_folium(
+
+        change_map,
+
+        width=None,
+
+        height=500,
+
+        returned_objects=[]
+    )
+
+
+    st.info(
+        "The actual Forest → Non-Forest raster is currently "
+        "being exported from Google Earth Engine. It will be "
+        "inserted here once the export is complete."
+    )
+
+
+    st.warning(
+        "Net forest change and gross deforestation are not the "
+        "same measure. Forest loss can occur in individual "
+        "locations even when total forest area increases."
+    )
+
+
+# ============================================================
+# PAGE 4 — DEFORESTATION CALCULATOR
+# ============================================================
+
+elif page == "🧮 Deforestation Calculator":
+
+    st.markdown(
+        '<div class="section-label">Interactive Tool</div>',
+        unsafe_allow_html=True
+    )
+
+    st.header(
+        "🌲 Deforestation Calculator"
+    )
+
+
+    st.write(
+        "Enter forest-area values for any two periods to "
+        "calculate forest loss, forest gain and percentage change."
+    )
+
+
+    # --------------------------------------------------------
+    # FORMULA
+    # --------------------------------------------------------
+
+    st.markdown(
+        """
+        <div class="formula-box">
+
+        <b>Forest Loss</b> =
+        Baseline Forest Area − Comparison Forest Area
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    st.latex(
+        r"Forest\ Loss="
+        r"A_{baseline}-A_{comparison}"
+    )
+
+
+    st.latex(
+        r"Deforestation\ (\%)="
+        r"\frac{A_{baseline}-A_{comparison}}"
+        r"{A_{baseline}}\times100"
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # INPUTS
+    # --------------------------------------------------------
+
+    input1, input2 = st.columns(2)
+
+
+    with input1:
+
+        baseline_input = st.number_input(
+
+            "Baseline Forest Area (km²)",
+
+            min_value=0.01,
+
+            value=float(
+                round(forest_2020, 2)
+            ),
+
+            step=1.0
+        )
+
+
+    with input2:
+
+        comparison_input = st.number_input(
+
+            "Comparison Forest Area (km²)",
+
+            min_value=0.0,
+
+            value=float(
+                round(forest_2025, 2)
+            ),
+
+            step=1.0
+        )
+
+
+    # --------------------------------------------------------
+    # CALCULATION
+    # --------------------------------------------------------
+
+    calculator_change = (
+        baseline_input -
+        comparison_input
+    )
+
+
+    calculator_percentage = (
+        calculator_change /
+        baseline_input *
+        100
+    )
+
+
+    st.subheader("Calculation")
+
+
+    st.write(
+        f"Forest Loss = "
+        f"{baseline_input:,.2f} − "
+        f"{comparison_input:,.2f}"
+    )
+
+
+    st.write(
+        f"**Result = "
+        f"{calculator_change:,.2f} km²**"
+    )
+
+
+    st.write(
+        f"Percentage = "
+        f"({baseline_input:,.2f} − "
+        f"{comparison_input:,.2f}) ÷ "
+        f"{baseline_input:,.2f} × 100"
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # RESULT
+    # --------------------------------------------------------
+
+    r1, r2, r3 = st.columns(3)
+
+
+    r1.metric(
+        "Baseline",
+        f"{baseline_input:,.2f} km²"
+    )
+
+
+    r2.metric(
+        "Comparison",
+        f"{comparison_input:,.2f} km²"
+    )
+
+
+    if calculator_change > 0:
+
+        r3.metric(
             "Forest Loss",
-            f"{calculator_result:,.2f} km²"
+            f"{calculator_change:,.2f} km²"
         )
 
-    elif calculator_result < 0:
 
-        st.metric(
+        st.error(
+            f"🌲 Forest Loss: "
+            f"{calculator_change:,.2f} km²\n\n"
+            f"Deforestation: "
+            f"{calculator_percentage:.2f}%"
+        )
+
+
+    elif calculator_change < 0:
+
+        gain = abs(
+            calculator_change
+        )
+
+
+        gain_percentage = abs(
+            calculator_percentage
+        )
+
+
+        r3.metric(
             "Forest Gain",
-            f"{abs(calculator_result):,.2f} km²"
+            f"{gain:,.2f} km²"
         )
+
+
+        st.success(
+            f"🌱 Forest Gain: "
+            f"{gain:,.2f} km²\n\n"
+            f"Net Forest Increase: "
+            f"{gain_percentage:.2f}%"
+        )
+
 
     else:
 
-        st.metric(
-            "Forest Change",
+        r3.metric(
+            "Change",
             "0.00 km²"
         )
 
 
-# ============================================================
-# SHOW CALCULATION
-# ============================================================
-
-st.subheader("Calculation")
-
-st.write(
-    f"Forest Loss = "
-    f"{calculator_baseline:,.2f} − "
-    f"{calculator_comparison:,.2f}"
-)
+        st.info(
+            "No net forest-area change."
+        )
 
 
-st.write(
-    f"**Forest Loss Formula Result = "
-    f"{calculator_result:,.2f} km²**"
-)
-
-
-st.write(
-    f"Percentage = "
-    f"({calculator_baseline:,.2f} − "
-    f"{calculator_comparison:,.2f}) "
-    f"÷ {calculator_baseline:,.2f} × 100"
-)
-
-
-# ============================================================
-# CALCULATOR INTERPRETATION
-# ============================================================
-
-if calculator_result > 0:
-
-    st.error(
-        f"🌲 Forest Loss = "
-        f"{calculator_result:,.2f} km²\n\n"
-        f"Deforestation = "
-        f"{calculator_percentage:.2f}%"
+    st.caption(
+        "A positive forest-loss result represents a decrease "
+        "in forest area. A negative result represents a net "
+        "increase in forest area."
     )
 
 
-elif calculator_result < 0:
+# ============================================================
+# PAGE 5 — AI MODEL
+# ============================================================
 
-    forest_gain = abs(
-        calculator_result
+elif page == "🤖 AI Model":
+
+    st.markdown(
+        '<div class="section-label">Machine Learning</div>',
+        unsafe_allow_html=True
     )
 
-    forest_gain_percentage = abs(
-        calculator_percentage
-    )
-
-    st.success(
-        f"🌱 Forest Gain = "
-        f"{forest_gain:,.2f} km²\n\n"
-        f"Net Forest Increase = "
-        f"{forest_gain_percentage:.2f}%"
+    st.header(
+        "Random Forest Classification Model"
     )
 
 
-else:
+    st.write(
+        "TerraScope AI uses supervised machine learning to "
+        "classify Sentinel-2 satellite pixels into five "
+        "land-use categories."
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # MODEL
+    # --------------------------------------------------------
+
+    m1, m2 = st.columns(2)
+
+
+    with m1:
+
+        st.subheader("Model")
+
+        st.metric(
+            "Algorithm",
+            "Random Forest"
+        )
+
+
+        st.write(
+            "Random Forest combines multiple decision trees "
+            "and assigns each pixel to a land-use category "
+            "based on its spectral characteristics."
+        )
+
+
+    with m2:
+
+        st.subheader("Training Reference")
+
+        st.metric(
+            "Reference Dataset",
+            "ESA WorldCover 2020"
+        )
+
+
+        st.write(
+            "ESA WorldCover reference classes were used to "
+            "generate labelled samples for model training."
+        )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # INPUT VARIABLES
+    # --------------------------------------------------------
+
+    st.subheader("Predictor Variables")
+
+
+    spectral_data = pd.DataFrame({
+
+        "Variable": [
+
+            "B2",
+            "B3",
+            "B4",
+            "B8",
+            "B11",
+            "B12",
+            "NDVI",
+            "NDWI",
+            "NDBI",
+            "BSI"
+        ],
+
+        "Purpose": [
+
+            "Blue spectral band",
+            "Green spectral band",
+            "Red spectral band",
+            "Near Infrared",
+            "Short-Wave Infrared 1",
+            "Short-Wave Infrared 2",
+            "Vegetation information",
+            "Water information",
+            "Built-up information",
+            "Bare-soil information"
+        ]
+    })
+
+
+    st.dataframe(
+
+        spectral_data,
+
+        use_container_width=True,
+
+        hide_index=True
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # CLASSES
+    # --------------------------------------------------------
+
+    st.subheader("Target Classes")
+
+
+    t1, t2, t3, t4, t5 = st.columns(5)
+
+
+    t1.success("0 — Forest")
+    t2.warning("1 — Agriculture")
+    t3.error("2 — Built-up")
+    t4.info("3 — Water")
+    t5.markdown("🟫 **4 — Barren**")
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # WORKFLOW
+    # --------------------------------------------------------
+
+    st.subheader("AI Workflow")
+
+
+    st.markdown("""
+    **Sentinel-2 Imagery**
+
+    ↓
+
+    **Cloud Masking & Pre-processing**
+
+    ↓
+
+    **Spectral Bands + NDVI + NDWI + NDBI + BSI**
+
+    ↓
+
+    **ESA WorldCover Reference Samples**
+
+    ↓
+
+    **Training / Testing Split**
+
+    ↓
+
+    **Random Forest Training**
+
+    ↓
+
+    **Pixel Classification**
+
+    ↓
+
+    **Five-Class Land-Use Map**
+    """)
+
 
     st.info(
-        "No net change in forest area."
+        "Model accuracy and confusion-matrix results can be "
+        "added here once the Earth Engine computation/export "
+        "results are available."
     )
 
 
-st.caption(
-    "A positive forest-loss result indicates a decrease in forest "
-    "area. A negative result indicates a net increase in forest area."
-)
-
-
-st.divider()
-
-
 # ============================================================
-# 5. DEFORESTATION MAP
+# PAGE 6 — METHODOLOGY
 # ============================================================
 
-st.header("5. Deforestation Map")
+elif page == "📖 Methodology":
 
-st.write(
-    "The change-detection model identifies pixels classified as "
-    "Forest in 2020 that became a non-forest land-use class in 2025."
-)
-
-
-st.markdown("""
-### Change-Detection Logic
-
-**Forest in 2020**
-
-↓
-
-**Pixel-by-Pixel Comparison**
-
-↓
-
-**Non-Forest in 2025**
-
-↓
-
-🔴 **Forest → Non-Forest Change**
-""")
-
-
-deforestation_map = folium.Map(
-    location=[30.2, 79.2],
-    zoom_start=7,
-    tiles="OpenStreetMap"
-)
-
-
-folium.Marker(
-    [30.3165, 78.0322],
-    tooltip="Forest Change Analysis",
-    popup="Uttarakhand: Forest → Non-Forest 2020–2025"
-).add_to(deforestation_map)
-
-
-st_folium(
-    deforestation_map,
-    width=None,
-    height=500,
-    returned_objects=[]
-)
-
-
-st.info(
-    "The actual Forest → Non-Forest raster has been generated "
-    "in Google Earth Engine as TerraScope_Deforestation_2020_2025."
-)
-
-
-st.warning(
-    "Net forest-area change and gross deforestation are different. "
-    "Forest loss can occur in some locations even when total classified "
-    "forest area increases overall."
-)
-
-
-st.divider()
-
-
-# ============================================================
-# 6. AREA-WISE COMPARISON TABLE
-# ============================================================
-
-st.header("6. Area-Wise Comparison Table")
-
-
-comparison_table = landuse_data.copy()
-
-
-comparison_table.columns = [
-    "Land-Use Category",
-    "Area 2020 (km²)",
-    "Area 2025 (km²)",
-    "Change (km²)",
-    "Change (%)"
-]
-
-
-for column in [
-    "Area 2020 (km²)",
-    "Area 2025 (km²)",
-    "Change (km²)",
-    "Change (%)"
-]:
-
-    comparison_table[column] = (
-        comparison_table[column].round(2)
+    st.markdown(
+        '<div class="section-label">Project Method</div>',
+        unsafe_allow_html=True
     )
 
-
-st.dataframe(
-    comparison_table,
-    use_container_width=True,
-    hide_index=True
-)
-
-
-st.caption(
-    "Source: TerraScope AI Random Forest classification "
-    "processed in Google Earth Engine."
-)
-
-
-# ============================================================
-# CHANGE INTERPRETATION
-# ============================================================
-
-st.subheader("Change Interpretation")
-
-
-interpretation = landuse_data.copy()
-
-
-interpretation["Trend"] = np.where(
-    interpretation["Change"] > 0,
-    "↑ Increase",
-    np.where(
-        interpretation["Change"] < 0,
-        "↓ Decrease",
-        "No Change"
+    st.header(
+        "Methodology & Data Sources"
     )
-)
 
-
-interpretation["Change"] = (
-    interpretation["Change"].round(2)
-)
-
-
-interpretation["Change (%)"] = (
-    interpretation["Change (%)"].round(2)
-)
-
-
-st.dataframe(
-
-    interpretation[
-        [
-            "Land Use",
-            "Change",
-            "Change (%)",
-            "Trend"
-        ]
-    ],
-
-    use_container_width=True,
-
-    hide_index=True
-)
-
-
-st.divider()
-
-
-# ============================================================
-# 7. LAND-USE CHANGE GRAPH
-# ============================================================
-
-st.header("7. Land-Use Change Graph")
-
-
-graph_data = landuse_data.melt(
-
-    id_vars="Land Use",
-
-    value_vars=[
-        "2020",
-        "2025"
-    ],
-
-    var_name="Year",
-
-    value_name="Area (km²)"
-)
-
-
-comparison_fig = px.bar(
-
-    graph_data,
-
-    x="Land Use",
-
-    y="Area (km²)",
-
-    color="Year",
-
-    barmode="group",
-
-    title="Land-Use Area Comparison: 2020 vs 2025"
-)
-
-
-comparison_fig.update_layout(
-
-    xaxis_title="Land-Use Category",
-
-    yaxis_title="Area (km²)",
-
-    legend_title="Year",
-
-    hovermode="x unified"
-)
-
-
-st.plotly_chart(
-    comparison_fig,
-    use_container_width=True
-)
-
-
-# ============================================================
-# NET CHANGE GRAPH
-# ============================================================
-
-st.subheader("Net Land-Use Change")
-
-
-change_fig = px.bar(
-
-    landuse_data,
-
-    x="Land Use",
-
-    y="Change",
-
-    title="Net Land-Use Change: 2020–2025",
-
-    labels={
-        "Change": "Area Change (km²)"
-    }
-)
-
-
-change_fig.add_hline(
-    y=0,
-    line_width=1
-)
-
-
-st.plotly_chart(
-    change_fig,
-    use_container_width=True
-)
-
-
-# ============================================================
-# FOREST COMPARISON
-# ============================================================
-
-st.subheader("Forest Area Comparison")
-
-
-forest_graph = pd.DataFrame({
-
-    "Year": [
-        "2020",
-        "2025"
-    ],
-
-    "Forest Area (km²)": [
-        forest_2020,
-        forest_2025
-    ]
-
-})
-
-
-forest_fig = px.bar(
-
-    forest_graph,
-
-    x="Year",
-
-    y="Forest Area (km²)",
-
-    title="Classified Forest Area: 2020 vs 2025",
-
-    text_auto=".2f"
-)
-
-
-st.plotly_chart(
-    forest_fig,
-    use_container_width=True
-)
-
-
-st.divider()
-
-
-# ============================================================
-# 8. AI MODEL
-# ============================================================
-
-st.header("8. AI Classification Model")
-
-
-model_col1, model_col2 = st.columns(2)
-
-
-with model_col1:
-
-    st.subheader("Random Forest")
 
     st.write(
-        "Random Forest combines multiple decision trees to classify "
-        "satellite pixels according to their spectral characteristics."
+        "The workflow follows the required AI-GIS land-use "
+        "classification and deforestation assessment process."
     )
 
-    st.markdown("""
-    **Predictor variables:**
 
-    - Blue Band — B2
-    - Green Band — B3
-    - Red Band — B4
-    - Near Infrared — B8
-    - SWIR-1 — B11
-    - SWIR-2 — B12
-    - NDVI
-    - NDWI
-    - NDBI
-    - BSI
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # OBJECTIVE
+    # --------------------------------------------------------
+
+    st.subheader("Objective")
+
+
+    st.write(
+        "To detect land-use changes and estimate forest change "
+        "in Uttarakhand by comparing satellite imagery from "
+        "two different years using machine learning and GIS."
+    )
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # INPUTS
+    # --------------------------------------------------------
+
+    st.subheader("Inputs")
+
+
+    st.markdown("""
+    - Sentinel-2 satellite imagery from **2020 and 2025**
+    - GIS boundary of the selected study area
+    - Five land-use categories:
+      - Forest
+      - Agriculture
+      - Built-up Area
+      - Water Body
+      - Barren Land
     """)
 
 
-with model_col2:
+    st.divider()
 
-    st.subheader("Classification Classes")
+
+    # --------------------------------------------------------
+    # WORKING PROCESS
+    # --------------------------------------------------------
+
+    st.subheader("Working Process")
+
 
     st.markdown("""
-    **0 — Forest**
+    ### 1. Satellite Image Acquisition
 
-    **1 — Agriculture**
+    Sentinel-2 imagery for 2020 and 2025 was accessed
+    through **Google Earth Engine**.
 
-    **2 — Built-up Area**
+    ### 2. Pre-processing
 
-    **3 — Water Body**
+    Images were filtered to Uttarakhand, cloud masked,
+    composited and clipped to the study area.
 
-    **4 — Barren Land**
+    ### 3. Land-Use Classes
+
+    Five target classes were defined:
+
+    **Forest • Agriculture • Built-up • Water • Barren**
+
+    ### 4. AI Model Training
+
+    ESA WorldCover 2020 reference labels were used to
+    generate samples for training the Random Forest model.
+
+    ### 5. Satellite Classification
+
+    The trained classifier was applied to Sentinel-2 imagery
+    to generate land-use maps for both years.
+
+    ### 6. Change Detection
+
+    The 2020 and 2025 classified images were compared
+    to identify land-use transitions.
+
+    ### 7. Forest-Loss Calculation
+
+    Forest-area change was calculated using:
+
+    **Forest Loss = Baseline Forest Area − Comparison Forest Area**
+
+    Pixel-level Forest → Non-Forest transitions were also
+    extracted to create the deforestation map.
     """)
 
 
-st.divider()
+    st.divider()
 
 
-# ============================================================
-# 9. WORKING PROCESS
-# ============================================================
+    # --------------------------------------------------------
+    # OUTPUTS
+    # --------------------------------------------------------
 
-st.header("9. Working Process")
-
-
-st.markdown("""
-### Step 1 — Satellite Image Acquisition
-
-Sentinel-2 satellite imagery for **2020 and 2025** was
-accessed using Google Earth Engine.
-
----
-
-### Step 2 — Image Pre-processing
-
-The satellite images were:
-
-- filtered to Uttarakhand,
-- filtered for cloud cover,
-- cloud masked,
-- composited, and
-- clipped to the study area.
-
----
-
-### Step 3 — Spectral Feature Extraction
-
-Four additional spectral indices were calculated:
-
-- **NDVI** — vegetation
-- **NDWI** — water
-- **NDBI** — built-up areas
-- **BSI** — bare soil
-
----
-
-### Step 4 — Training Samples
-
-ESA WorldCover 2020 reference classes were used to generate
-labelled samples for the five required land-use categories.
-
----
-
-### Step 5 — Random Forest Training
-
-The labelled samples were divided into training and testing
-datasets.
-
-A Random Forest classifier was trained using the spectral
-bands and indices.
-
----
-
-### Step 6 — Land-Use Classification
-
-The trained model classified Sentinel-2 imagery into:
-
-1. Forest
-2. Agriculture
-3. Built-up Area
-4. Water Body
-5. Barren Land
-
----
-
-### Step 7 — Change Detection
-
-The classified images from **2020 and 2025** were compared.
-
-Pixels changing from:
-
-**Forest → Non-Forest**
-
-were identified as potential forest-loss areas.
-
----
-
-### Step 8 — Area Calculation
-
-Pixel areas were converted to square kilometres to quantify
-land-use change and forest-area change.
-""")
+    st.subheader("Outputs")
 
 
-st.divider()
+    st.markdown("""
+    **1. Land-Use Classification Map**
+
+    **2. Deforestation Map**
+
+    **3. Area-Wise Comparison Table**
+
+    **4. Land-Use Change Graph**
+    """)
 
 
-# ============================================================
-# 10. MODEL OUTPUTS
-# ============================================================
-
-st.header("10. Model Outputs")
+    st.divider()
 
 
-output1, output2 = st.columns(2)
+    # --------------------------------------------------------
+    # SOURCES
+    # --------------------------------------------------------
+
+    st.subheader("Data Sources")
 
 
-with output1:
+    st.markdown("""
+    ### Sentinel-2
 
-    st.subheader("🗺️ Land-Use Classification Map")
+    Multispectral Earth-observation imagery used for
+    classification.
 
-    st.write(
-        "Spatial classification of the five land-use categories "
-        "for 2020 and 2025."
+    **Source:** Copernicus Sentinel-2 / European Union
+    Space Programme
+
+    ### ESA WorldCover 2020
+
+    Global land-cover product used as a reference source
+    for labelled training samples.
+
+    **Source:** European Space Agency
+
+    ### Google Earth Engine
+
+    Used for satellite-data access, pre-processing,
+    machine-learning classification, change detection,
+    area calculation and raster export.
+    """)
+
+
+    st.divider()
+
+
+    # --------------------------------------------------------
+    # LIMITATIONS
+    # --------------------------------------------------------
+
+    st.subheader("Limitations")
+
+
+    st.warning(
+        "The land-use areas produced by TerraScope AI are "
+        "model-derived remote-sensing estimates. They should "
+        "not be interpreted as official government forest "
+        "statistics."
     )
 
 
-    st.subheader("📋 Area-Wise Comparison Table")
-
     st.write(
-        "Quantitative comparison of land-use area between "
-        "2020 and 2025."
+        "Classification uncertainty may arise from cloud masking, "
+        "seasonal differences, spectral similarity between classes, "
+        "reference-label quality and model generalisation."
     )
-
-
-with output2:
-
-    st.subheader("🌲 Deforestation Map")
-
-    st.write(
-        "Spatial detection of Forest → Non-Forest transitions."
-    )
-
-
-    st.subheader("📊 Land-Use Change Graph")
-
-    st.write(
-        "Visual comparison of changes in all five land-use categories."
-    )
-
-
-st.divider()
-
-
-# ============================================================
-# 11. DATA SOURCES
-# ============================================================
-
-st.header("11. Data Sources")
-
-
-st.markdown("""
-### Sentinel-2
-
-Multispectral satellite imagery used as the primary input
-for land-use classification.
-
-**Source:** Copernicus Sentinel-2 / European Union Space Programme
-
----
-
-### ESA WorldCover 2020
-
-Used as the reference land-cover dataset for generating
-labelled training samples.
-
-**Source:** European Space Agency WorldCover
-
----
-
-### Google Earth Engine
-
-Used for:
-
-- satellite-image access,
-- cloud masking,
-- image compositing,
-- spectral-index calculation,
-- Random Forest classification,
-- change detection,
-- area calculation, and
-- raster/CSV export.
-""")
-
-
-st.divider()
-
-
-# ============================================================
-# RESULT SUMMARY
-# ============================================================
-
-st.header("Result Summary")
-
-
-st.success(
-    f"The model estimates classified forest area of "
-    f"{forest_2020:,.2f} km² in 2020 and "
-    f"{forest_2025:,.2f} km² in 2025."
-)
-
-
-st.info(
-    f"This corresponds to a model-derived net forest increase of "
-    f"{net_forest_change:,.2f} km² "
-    f"({net_forest_change_percentage:.2f}%). "
-    f"Forest → Non-Forest transitions are analysed separately "
-    f"through the change-detection raster."
-)
-
-
-st.warning(
-    "TerraScope AI results are model-derived remote-sensing estimates "
-    "for this project and are not official government forest statistics."
-)
 
 
 # ============================================================
