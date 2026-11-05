@@ -84,3 +84,4 @@ default_landuse_data = pd.DataFrame(
             "Agriculture",
             "Built-up Area",
             "Water Body", ]
+    }
