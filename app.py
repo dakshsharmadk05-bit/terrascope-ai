@@ -1,32 +1,3 @@
-                        result=calculate(index,b)
-                        st.session_state["spectral_result"]=(result,meta,index)
-                if "spectral_result" in st.session_state:
-                    result,outmeta,outname=st.session_state["spectral_result"]
-                    if outname==index: result_display(result,outmeta,f"{index.lower()}.tif")
-            except Exception as exc: st.error(f"Cannot process raster: {exc}")
-    else:
-        uploads={key:st.file_uploader(BAND_LABELS[key],type=["tif","tiff"],key=f"upload_{key}") for key in dict.fromkeys(required)}
-        scale=st.number_input("Divide raw pixel values by",min_value=0.00001,value=10000.0,key="separate_scale")
-        if all(uploads.values()) and st.button("Calculate index",type="primary"):
-            try:
-                bands={}; meta0=None
-                for key,upload in uploads.items():
-                    arr,meta,_=load_raster(upload)
-                    if arr.shape[0]!=1: raise ValueError(f"{key} must be a single-band raster.")
-                    if meta0 is None: meta0=meta
-                    elif (meta["width"],meta["height"],meta["transform"],meta["crs"])!=(meta0["width"],meta0["height"],meta0["transform"],meta0["crs"]):
-                        raise ValueError("Bands must share CRS, dimensions, and pixel grid. Align them in GIS first.")
-                    bands[key]=arr[0].filled(np.nan)/scale
-                result_display(calculate(index,bands),meta0,f"{index.lower()}.tif")
-            except Exception as exc: st.error(f"Cannot process rasters: {exc}")
-
-elif page=="🗺️ Land-Use Calculator":
-    st.header("Land-use area analysis")
-    mode=st.radio("Input method",["✍️ Edit area values","📄 Upload area CSV","🗺️ Upload categorical classification rasters"],horizontal=True)
-    if mode.startswith("✍️") or "CSV" in mode:
-        st.info("Area values are user-provided, not automatically classified. Use km² for both dates.")
-        if "CSV" in mode:
-            f=st.file_uploader("CSV columns: Class, Baseline, Comparison (km²)",type="csv")
             if f is None: st.stop()
             try: df=pd.read_csv(f)
             except Exception as exc: st.error(str(exc)); st.stop()
@@ -74,6 +45,9 @@ elif page=="🌲 Deforestation Calculator":
             try:
                 df=pd.read_csv(f)
                 a=float(df.loc[0,"baseline_km2"]); b=float(df.loc[0,"comparison_km2"])
+                st.caption("CSV values loaded. You can edit them before calculating.")
+                a=st.number_input("Baseline forest area (km²)",min_value=0.0,value=a,key="csv_forest_a")
+                b=st.number_input("Comparison forest area (km²)",min_value=0.0,value=b,key="csv_forest_b")
             except Exception as exc: st.error(f"Invalid CSV: {exc}"); st.stop()
         else:
             a=st.number_input("Baseline forest area (km²)",min_value=0.0,value=100.0,step=1.0)
@@ -126,3 +100,8 @@ elif page=="🔄 Change Detection":
         except Exception as exc: st.error(str(exc))
 
 else:
+    st.header("Methodology and limitations")
+    st.markdown("""**Spectral indices:** Calculated per pixel from user-assigned spectral bands. NDWI here means McFeeters water index (Green−NIR)/(Green+NIR). EVI and SAVI need correctly scaled reflectance. Invalid/masked pixels are excluded. Cloud masking is **not** automated.\n\n**Land-use analysis:** Accepts user-supplied class areas or existing categorical land-cover maps. It does **not** classify raw imagery, train Random Forest, or produce accuracy metrics.\n\n**Deforestation:** Manual forest areas yield net change only. Two categorical maps allow gross Forest→Non-forest and Non-forest→Forest transitions. These transitions are not proof of permanent deforestation.\n\n**Area calculation:** Uses projected raster pixel area and requires metre units. Use an appropriate equal-area projection for defensible regional area estimates.\n\n**QGIS:** Exported GeoTIFFs can be opened in QGIS later. No Google Earth Engine dependencies are used.\n\n**Next improvements:** Sensor-aware scale/offset handling, cloud/shadow masking, band recognition, raster alignment, training-data-backed land-cover classification, and validation against reference imagery.""")
+
+st.divider()
+st.caption("TerraScope AI · Raster calculations are data-derived; manual calculations are user-supplied · Research use requires independent validation")
